@@ -318,25 +318,31 @@
         }
 
         // FORMULÁRIO DE ANÚNCIO
-        function renderAnunciar() {
-            document.getElementById('main-content').innerHTML = `
-                <h1>Anunciar Material</h1>
-                <form class="form-cadastro" onsubmit="alert('Seu anúncio será publicado após análise.'); return false">
+                function renderAnunciar() {
+                document.getElementById('main-content').innerHTML = `
+                    <h1>Anunciar Material</h1>
+                <form class="form-cadastro" action="anunciar.php" method="POST" enctype="multipart/form-data">
                     <label>Título do Material:</label>
-                    <input type="text" required>
+                <input type="text" name="titulo" required>
+
                     <label>Categoria:</label>
-                    <select required>
-                        ${categorias.map(cat=>`<option>${cat.nome}</option>`).join('')}
+                    <select name="categoria" required>
+                        ${categorias.map(cat=>`<option value="${cat.nome}">${cat.nome}</option>`).join('')}
                     </select>
+
                     <label>Descrição:</label>
-                    <input type="text">
+                    <input type="text" name="descricao">
+
                     <label>Valor (R$):</label>
-                    <input type="number" min="0" step="any">
+                <input type="number" name="valor" min="0" step="any">
+
                     <label>Frete (R$):</label>
-                    <input type="number" min="0" step="any">
-                    <label>Imagem:</label>
-                    <input type="file">
-                    <button class="botao-destaque" type="submit">Publicar</button>
+                    <input type="number" name="frete" min="0" step="any">
+
+                    <label>Imagem (Máx 10MB): </label>
+                    <input type="file" name="imagem" required>
+
+                <button class="botao-destaque" type="submit">Publicar</button>
                 </form>
             `;
         }

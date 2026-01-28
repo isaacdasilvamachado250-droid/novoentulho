@@ -128,3 +128,9 @@ _modules/*
 "env"
 "env"
 ".env"
+"" 
+"# Remover do hist¢rico" 
+"writable/*" 
+"!writable/.htaccess" 
+"!writable/index.html" 
+uploads/
