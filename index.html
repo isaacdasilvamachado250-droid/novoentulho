@@ -205,11 +205,11 @@
     <script>
         // Dados fictícios de exemplo, pode carregar do backend ou localStorage!
         const categorias = [
-            {nome:"Madeiras", img:"madeiras.jpg"},
-            {nome:"Concretos", img:"concretos.jpg"},
-            {nome:"Ferros e Aços", img:"ferros.jpg"},
-            {nome:"Azulejos", img:"azulejos.jpg"},
-            {nome:"Aterros", img:"aterros.jpg"},
+            {nome:"Madeiras", img:"img/madeiras.jpg"},
+            {nome:"Concretos", img:"img/concretos.jpg"},
+            {nome:"Ferros e Aços", img:"img/ferros.jpg"},
+            {nome:"Azulejos", img:"img/azulejos.jpg"},
+            {nome:"Aterros", img:"img/aterros.jpg"},
         ];
         const produtos = [
             {
@@ -318,47 +318,110 @@
         }
 
         // FORMULÁRIO DE ANÚNCIO
-                function renderAnunciar() {
-                document.getElementById('main-content').innerHTML = `
-                    <h1>Anunciar Material</h1>
-                <form class="form-cadastro" action="anunciar.php" method="POST" enctype="multipart/form-data">
-                    <label>Título do Material:</label>
+        function renderAnunciar() {
+        document.getElementById('main-content').innerHTML = `
+            <h1>Anunciar Material</h1>
+            <form id="form-anuncio" class="form-cadastro" enctype="multipart/form-data">
+                <label>Título do Material:</label>
                 <input type="text" name="titulo" required>
 
-                    <label>Categoria:</label>
-                    <select name="categoria" required>
-                        ${categorias.map(cat=>`<option value="${cat.nome}">${cat.nome}</option>`).join('')}
-                    </select>
+                <label>Categoria:</label>
+                <select name="categoria" required>
+                    ${categorias.map(cat=>`<option value="${cat.nome}">${cat.nome}</option>`).join('')}
+                </select>
 
-                    <label>Descrição:</label>
-                    <input type="text" name="descricao">
+                <label>Descrição:</label>
+                <input type="text" name="descricao" required>
 
-                    <label>Valor (R$):</label>
-                <input type="number" name="valor" min="0" step="any">
+                <label>Valor (R$):</label>
+                <input type="number" name="valor" min="0" step="any" required>
 
-                    <label>Frete (R$):</label>
-                    <input type="number" name="frete" min="0" step="any">
+                <label>Frete (R$):</label>
+                <input type="number" name="frete" min="0" step="any" required>
 
-                    <label>Imagem (Máx 10MB): </label>
-                    <input type="file" name="imagem" required>
-
+                <label>Imagem (Máx 10MB): </label>
+                <input type="file" name="imagem" required>
+                <div id="mensagemResposta" style="text-align: center; margin-top: 20px; font-weight: bold; color: black;"></div>
                 <button class="botao-destaque" type="submit">Publicar</button>
-                </form>
-            `;
-        }
+            </form>
 
-        // LOGIN SIMPLES
+        `;
+        //Ativa o envio assim que o formulário aparece na tela
+        $("#form-anuncio").on("submit", function(e) {
+            e.preventDefault(); // Impede de sair da página
+
+            var formData = new FormData(this);
+            $("#mensagemResposta").html("Processando anúncio...");
+
+            $.ajax({
+                url: 'anunciar.php',
+                type: 'POST',
+                data: formData,
+                success: function(resposta) {
+                    const cor = resposta.includes("sucesso") ? "green" : "red";
+                    $("#mensagemResposta").css('color', cor).html(resposta);
+                    // Se a resposta tiver a palavra 'sucesso', limpa o formulário
+                    if(resposta.indexOf("sucesso") !== -1) {
+                        $("#form-anuncio")[0].reset();
+                    }
+                },
+                cache: false,
+                contentType: false,
+                processData: false
+            });
+        });
+    }
+        //TELA DE LOGIN
         function renderLogin() {
             document.getElementById('main-content').innerHTML = `
-                <h1>Login</h1>
-                <form class="form-cadastro" onsubmit="alert('Login simulado!');navigate('conta');return false;">
+                <h1>Criar Conta</h1>
+                <form id="form-cadastro" class="form-cadastro">
+                    <label>Nome:</label>
+                        <input type="text" name="nome" required>
+                    <label>CPF:</label>
+                        <input type="text" name="cpf" placeholder="000.000.000-00" required>
                     <label>Email:</label>
-                    <input type="email" required>
+                    <input type="email" name="email" required>
+                    <label>Telefone:</label>
+                        <input type="text" name="telefone" placeholder="(00) 00000-0000" required>
+                    <label>Endereço:</label>
+                        <input type="text" name="endereco" required>
                     <label>Senha:</label>
-                    <input type="password" required>
-                    <button type="submit" class="botao-destaque">Entrar</button>
+                        <input type="password" name="senha" id="senha" required>
+                    <label>Confirmar senha:</label>
+                        <input type="password" name="confirmar_senha" id="confirmar_senha" required>
+                        <div id="mensagemResposta" style="text-align: center; margin-top: 20px; font-weight: bold;"></div>
+                    <button type="submit" class="botao-destaque">Cadastrar</button>
                 </form>
+
             `;
+
+            //Aplica o formato específico de cada dado
+            $('input[name="cpf"]').mask('000.000.000-00');
+            $('input[name="telefone"]').mask('(00) 00000-0000');
+
+            $('#form-cadastro').on('submit', function(e) {
+                e.preventDefault();
+
+                const dados = new FormData(this);
+
+                $.ajax({
+                    url: 'login.php',
+                    type: 'POST',
+                    data: dados,
+                    processData: false,
+                    contentType: false,
+                    success: function(resposta) {
+                        // Se o PHP retornar sucesso, muda a cor para verde, ou vermelho caso contrário
+                        const cor = resposta.includes("sucesso") ? "green" : "red";
+                        $('#mensagemResposta').css('color', cor).html(resposta);
+
+                        if(resposta.includes("sucesso")) {
+                            $('#form-cadastro')[0].reset();
+                        }
+                    }
+                });
+            });
         }
 
         // PERFIL/CONTA
@@ -416,5 +479,7 @@
             if(view==="conta") document.querySelectorAll('.menu-btn')[4].classList.add('selected');
         }
     </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 </body>
 </html>
