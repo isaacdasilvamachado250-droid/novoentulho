@@ -5,9 +5,17 @@
     <title>Novo Entulho</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+
+        @font-face {
+            font-family: 'Montserrat';
+            src: url('fonts/montserrat/Montserrat-Regular.ttf') format('truetype'); 
+            font-weight: normal;
+            font-style: normal;
+        }
+
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: Montserrat, sans-serif;
             background: #fff;
             min-height: 100vh;
         }
@@ -37,6 +45,7 @@
             border-radius: 18px;
             border: none;
             padding: 8px 20px;
+            font-family: Montserrat, sans-serif;
             font-size: 1rem;
             font-weight: bold;
             transition: background 0.21s, box-shadow 0.21s, transform 0.12s;
@@ -114,6 +123,7 @@
             border-radius: 32px;
             border: none;
             padding: 13px 44px;
+            font-family: Montserrat, sans-serif;
             font-size: 1.25em;
             font-weight: bold;
             transition: background 0.15s, transform 0.12s;
@@ -190,7 +200,7 @@
             <button class="menu-btn selected" onclick="navigate('home')">Início</button>
             <button class="menu-btn" onclick="navigate('categorias')">Categorias</button>
             <button class="menu-btn" onclick="navigate('anunciar')">Anunciar</button>
-            <button class="menu-btn" onclick="navigate('login')">Login</button>
+            <button class="menu-btn" onclick="navigate('cadastro')">Cadastro</button>
             <button class="menu-btn" onclick="navigate('conta')">Minha Conta</button>
         </nav>
     </header>
@@ -199,7 +209,7 @@
     </main>
     <footer>
         <span class="footer-logo">Novo Entulho</span>
-        <span>UFPA - Campus Belém - GEPPES - @GEPPES | 8h-12h/14h-18h | (91) 98441-9680</span>
+        <span><b>UFPA - Campus Belém - GEPPES - @GEPPES | 8h-12h/14h-18h | (91) 98441-9680</b></span>
     </footer>
 
     <script>
@@ -210,6 +220,7 @@
             {nome:"Ferros e Aços", img:"img/ferros.jpg"},
             {nome:"Azulejos", img:"img/azulejos.jpg"},
             {nome:"Aterros", img:"img/aterros.jpg"},
+            {nome:"Outros", img:"img/Outros.jpg"},
         ];
         const produtos = [
             {
@@ -241,7 +252,7 @@
             if(view==="home") document.querySelectorAll('.menu-btn')[0].classList.add('selected');
             if(view==="categorias") document.querySelectorAll('.menu-btn')[1].classList.add('selected');
             if(view==="anunciar") document.querySelectorAll('.menu-btn')[2].classList.add('selected');
-            if(view==="login") document.querySelectorAll('.menu-btn')[3].classList.add('selected');
+            if(view==="cadastro") document.querySelectorAll('.menu-btn')[3].classList.add('selected');
             if(view==="conta") document.querySelectorAll('.menu-btn')[4].classList.add('selected');
 
             if(view==="home") renderHome();
@@ -249,7 +260,7 @@
             if(view==="categoria") renderProdutos(param);
             if(view==="produto") renderProdutoDetalhe(param);
             if(view==="anunciar") renderAnunciar();
-            if(view==="login") renderLogin();
+            if(view==="cadastro") renderEscPerfil();
             if(view==="conta") renderConta();
         }
 
@@ -342,7 +353,7 @@
                 <label>Imagem (Máx 10MB): </label>
                 <input type="file" name="imagem" required>
                 <div id="mensagemResposta" style="text-align: center; margin-top: 20px; font-weight: bold; color: black;"></div>
-                <button class="botao-destaque" type="submit">Publicar</button>
+                <button style="text-align: center;" class="menu-btn" type="submit">Publicar</button>
             </form>
 
         `;
@@ -371,19 +382,45 @@
             });
         });
     }
-        //TELA DE LOGIN
-        function renderLogin() {
+        //Perfil/Vendedor
+        function renderEscPerfil() {
             document.getElementById('main-content').innerHTML = `
-                <h1>Criar Conta</h1>
+                <div style="text-align:center; padding:40px;">
+                    <h1>Vamos Começar?</h1>
+                    <p>Escolha o tipo de conta a ser criada</p>
+                    <p style="color:red; font-size:14px;">Restrito exclusivamente a residentes de Belém, Ananindeua e Marituba.</p>
+                    
+                    <div style="display:flex; justify-content:center; gap:20px; margin-top:30px;">
+                        <button class="menu-btn" onclick="renderCadastro('Comprador')">Perfil Comprador</button>
+                        <button class="menu-btn" onclick="renderCadastro('Vendedor')">Perfil Vendedor</button>
+                    </div>
+                    <p style="margin-top:20px;">Já possui conta? <a href="#" onclick="renderLogin()">Entrar.</a></p>
+                </div>
+            `;
+        }
+
+        //TELA DE CADASTRO
+        function renderCadastro(tipoPerfil) {
+            document.getElementById('main-content').innerHTML = `
+                <h1>Cadastro do ${tipoPerfil}</h1>
                 <form id="form-cadastro" class="form-cadastro">
+                    <input type="hidden" name="perfil_usuario" value="${tipoPerfil}">
                     <label>Nome:</label>
                         <input type="text" name="nome" required>
-                    <label>CPF:</label>
-                        <input type="text" name="cpf" placeholder="000.000.000-00" required>
+                    <label>Tipo de pessoa:</label>
+                        <select id="tipo_pessoa" name="tipo_pessoa">
+                            <option selected disabled>Selecionar tipo:</option>
+                            <option value="PF">Pessoa física</option>
+                            <option value="PJ">Pessoa jurídica</option>
+                        </select><br>
+                    <label id="label-doc">CPF:</label>
+                        <input type="text" name="cpf" id="doc_input" placeholder="Selecione o tipo primeiro:" required>
                     <label>Email:</label>
-                    <input type="email" name="email" required>
+                        <input type="email" name="email" required>
                     <label>Telefone:</label>
                         <input type="text" name="telefone" placeholder="(00) 00000-0000" required>
+                    <label>CEP:</label>
+                        <input type="text" name="cep" placeholder="00000-000" required>
                     <label>Endereço:</label>
                         <input type="text" name="endereco" required>
                     <label>Senha:</label>
@@ -391,64 +428,175 @@
                     <label>Confirmar senha:</label>
                         <input type="password" name="confirmar_senha" id="confirmar_senha" required>
                         <div id="mensagemResposta" style="text-align: center; margin-top: 20px; font-weight: bold;"></div>
-                    <button type="submit" class="botao-destaque">Cadastrar</button>
+                    <button type="submit" class="menu-btn" >Cadastrar</button>
                 </form>
 
             `;
-
-            //Aplica o formato específico de cada dado
-            $('input[name="cpf"]').mask('000.000.000-00');
+            //Aplica a máscara do telefone
             $('input[name="telefone"]').mask('(00) 00000-0000');
+            $('input[name="cep"]').mask('00000-000');
+
+            // Monitora o campo de CEP
+            $('input[name="cep"]').on('blur', function() {
+                let cep = $(this).val().replace(/\D/g, '');
+
+                if (cep.length === 8) {
+
+                    $.getJSON(`https://viacep.com.br/ws/${cep}/json/`, function(dados) {
+                        if (!("erro" in dados)) {
+
+                            let enderecoCompleto = `${dados.logradouro}, ${dados.bairro} - ${dados.localidade}/${dados.uf}`;
+
+                            // Coloca tudo no campo de endereço
+                            $('input[name="endereco"]').val(enderecoCompleto);
+
+                            // Move o cursor para o final para o usuário só digitar o número da casa
+                            $('input[name="endereco"]').focus();
+                        } else {
+                            alert("CEP não encontrado.");
+                            $('input[name="endereco"]').val('');
+                        }
+                    });
+                }
+            });
+
+            $('#tipo_pessoa').on('change', function() {
+            const tipo = $(this).val();
+            const inputDoc = $('input[name="cpf"]');
+            const labelDoc = $('#label-doc');
+
+            if (!tipo) return;
+
+            inputDoc.unmask(); // Remove a máscara atual
+            inputDoc.prop('disabled', false);
+
+                if (tipo === 'PF') {
+                    labelDoc.text('CPF:');
+                    inputDoc.attr('placeholder', '000.000.000-00');
+                    inputDoc.mask('000.000.000-00');
+                } else {
+                    labelDoc.text('CNPJ:');
+                    inputDoc.attr('placeholder', '00.000.000/0000-00');
+                    inputDoc.mask('00.000.000/0000-00');
+                }
+            });
 
             $('#form-cadastro').on('submit', function(e) {
                 e.preventDefault();
 
-                const dados = new FormData(this);
+                // Validação do Tipo de Pessoa
+            const tipoPessoa = $('#tipo_pessoa').val();
+            if (!tipoPessoa) { // Se for null ou a opção disabled
+                $('#mensagemResposta').css('color', 'red').html("Por favor, selecione se você é Pessoa física ou jurídica.");
+            return;
+            }
 
-                $.ajax({
-                    url: 'login.php',
-                    type: 'POST',
-                    data: dados,
-                    processData: false,
-                    contentType: false,
-                    success: function(resposta) {
-                        // Se o PHP retornar sucesso, muda a cor para verde, ou vermelho caso contrário
-                        const cor = resposta.includes("sucesso") ? "green" : "red";
-                        $('#mensagemResposta').css('color', cor).html(resposta);
+            const dados = new FormData(this);
 
-                        if(resposta.includes("sucesso")) {
-                            $('#form-cadastro')[0].reset();
+            $.ajax({
+                url: 'cadastro.php',
+                type: 'POST',
+                data: dados,
+                processData: false,
+                contentType: false,
+                success: function(resposta) {
+                    // Se o PHP retornar sucesso, muda a cor para verde, ou vermelho caso contrário
+                    const cor = resposta.includes("sucesso") ? "green" : "red";
+                    $('#mensagemResposta').css('color', cor).html(resposta);
+
+                    if(resposta.includes("sucesso")) {
+                        renderConta();
+                        }else{
+                            $('#mensagemResposta').css('color', 'red').html(resposta);
                         }
                     }
                 });
             });
         }
 
-        // PERFIL/CONTA
+        //MINHA CONTA
         function renderConta() {
-            document.getElementById('main-content').innerHTML = `
-                <h1>Minha Conta</h1>
-                <div style="display:flex;gap:55px;flex-wrap:wrap;margin-top:20px;">
-                    <div>
-                        <img src="perfil.jpg" alt="Usuário" style="width:135px;border-radius:50%;margin-bottom:12px;">
-                        <p><b>Nome:</b> Gustavo Araujo</p>
-                        <p><b>Email:</b> luizgustavoaraujo@gmail.com</p>
-                        <p><b>Telefone:</b> (91) 98441-9680</p>
-                        <button class="botao-destaque" onclick="alert('Sair realizado!');navigate('home');">Sair</button>
-                    </div>
-                    <div>
-                        <h2>Últimas Compras</h2>
-                        <div class="produtos-grid">
-                            ${produtos.map(p=>`
+            // Chamada AJAX para buscar dados da sessão e do banco
+            $.ajax({
+                url: 'get_perfil.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(dados) {
+                    if (dados.erro) {
+                        // Se não estiver logado, aparecerá essa tela
+                        document.getElementById('main-content').innerHTML = `
+                            <div style="text-align:center; padding:50px;">
+                                <h2>Você ainda não possui uma conta.</h2>
+                                <p>Para ver seus anúncios, você precisa estar logado.</p>
+                                <button class="menu-btn" onclick="renderEscPerfil()">Cadastrar-se</button>
+                                <br>
+                                <p style="margin-top:30px;">Já tem uma conta?</p>
+                                <button class="menu-btn" onclick="renderLogin()">Fazer Login</button>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let tituloHistorico = (dados.perfil === 'Vendedor') ? 'Minhas Vendas' : 'Últimas Compras';
+
+                    let htmlHistorico = '';
+
+                    if (dados.historico.length > 0) {
+                        htmlHistorico = dados.historico.map(p => `
                             <div class="card">
-                                <img src="${p.img}" alt="${p.nome}">
-                                <strong>${p.nome}</strong><br>
-                                R$ ${p.preco.toFixed(2)}
-                            </div>`).join('')}
+                                <img src="${p.imagem_path}" width="300" height="300" alt="${p.titulo}">
+                                <strong>${p.titulo}</strong><br>
+                                R$ ${parseFloat(p.valor).toFixed(2)}
+                            </div>`).join('');
+                    } else {
+                        htmlHistorico = dados.perfil === 'Vendedor'
+                            ? '<p>Você ainda não anunciou nada. <a href="#" onclick="event.preventDefault(); renderAnunciar()">Anunciar agora!</a></p>'
+                            : '<p>Você ainda não comprou nada. <a href="#" onclick="renderHome()">Explorar ofertas!</a></p>';
+                    }
+
+                    document.getElementById('main-content').innerHTML = `
+                        <h1>Minha Conta</h1>
+                        <div style="display:flex;gap:55px;flex-wrap:wrap;margin-top:20px;">
+                            <div>
+                                <img src="img/perfil_default.png" alt="Usuário" style="width:135px;border-radius:50%;margin-bottom:12px;">
+                                <p><b>Nome:</b> ${dados.nome}</p>
+                                <p><b>Email:</b> ${dados.email}</p>
+                                <p><b>Telefone:</b> ${dados.telefone}</p>
+                                <p><b>Perfil:</b> ${dados.perfil}</p>
+                                <button class="botao-destaque" onclick="logout()">Sair</button>
+                            </div>
+                            <div>
+                                <h2>${tituloHistorico}</h2>
+                                <div class="produtos-grid">
+                                    ${htmlHistorico}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            `;
+                    `;
+                },
+                error: function() {
+                    alert("Erro ao carregar dados da conta.");
+                }
+            });
+        }
+
+        //BOTÃO "SAIR"
+        function logout() {
+            if (confirm("Deseja realmente sair?")) {
+                $.ajax({
+                    url: 'logout.php',
+                    type: 'GET',
+                    success: function(resposta) {
+                        if (resposta.trim() === "sucesso") {
+                            alert("Você saiu da sua conta.");
+                            renderConta();
+                        }
+                    },
+                    error: function() {
+                        alert("Erro ao tentar sair.");
+                    }
+                });
+            }
         }
 
         // Primeira renderização!
@@ -468,14 +616,14 @@
             if(view==="categoria") renderProdutos(param);
             if(view==="produto") renderProdutoDetalhe(param);
             if(view==="anunciar") renderAnunciar();
-            if(view==="login") renderLogin();
+            if(view==="cadastro") renderEscPerfil();
             if(view==="conta") renderConta();
             // Menu
             document.querySelectorAll('.menu-btn').forEach(btn=>btn.classList.remove('selected'));
             if(view==="home") document.querySelectorAll('.menu-btn')[0].classList.add('selected');
             if(view==="categorias") document.querySelectorAll('.menu-btn')[1].classList.add('selected');
             if(view==="anunciar") document.querySelectorAll('.menu-btn')[2].classList.add('selected');
-            if(view==="login") document.querySelectorAll('.menu-btn')[3].classList.add('selected');
+            if(view==="cadastro") document.querySelectorAll('.menu-btn')[3].classList.add('selected');
             if(view==="conta") document.querySelectorAll('.menu-btn')[4].classList.add('selected');
         }
     </script>

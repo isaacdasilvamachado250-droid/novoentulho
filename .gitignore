@@ -134,3 +134,4 @@ _modules/*
 "!writable/.htaccess" 
 "!writable/index.html" 
 uploads/
+img/
