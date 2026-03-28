@@ -73,9 +73,10 @@
         /* Cards para produtos/categorias */
         .produtos-grid, .categorias-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
             gap: 28px;
             margin-top: 30px;
+            justify-content: start;
         }
         .card {
             background: #fff;
@@ -83,6 +84,9 @@
             border-radius: 14px;
             box-shadow: 0 3px 18px #0002;
             transition: transform 0.22s, box-shadow 0.22s;
+            width: 100%;
+            max-width: 270px;
+            margin: 0 auto;
             cursor: pointer;
             overflow: hidden;
         }
@@ -92,6 +96,8 @@
         }
         .card img {
             width: 100%;
+            height: 200px;
+            object-fit: cover;
             border-radius: 6px;
             margin-bottom: 8px;
         }
@@ -212,6 +218,8 @@
         <span><b>UFPA - Campus Belém - GEPPES - @GEPPES | 8h-12h/14h-18h | (91) 98441-9680</b></span>
     </footer>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script>
         // Dados fictícios de exemplo, pode carregar do backend ou localStorage!
         const categorias = [
@@ -222,30 +230,7 @@
             {nome:"Aterros", img:"img/aterros.jpg"},
             {nome:"Outros", img:"img/Outros.jpg"},
         ];
-        const produtos = [
-            {
-                id:1,
-                cat:"Concretos",
-                img:"concreto1.jpg",
-                nome:"Tijolo Estrutural de Concreto Grande 130 Kg - 0.6 m³",
-                local:"Ananindeua-PA",
-                vendedor:"José Almeida Cunha",
-                distancia:"24 km",
-                preco:228.99,
-                frete:50.00
-            },{
-                id:2,
-                cat:"Concretos",
-                img:"concreto2.jpg",
-                nome:"Tijolos de Concreto l240 Kg - 3.0 m³",
-                local:"Belém-PA",
-                vendedor:"Kuririn Construções",
-                distancia:"10 km",
-                preco:1300.00,
-                frete:0.00
-            }
-            // Adicione mais produtos conforme desejar
-        ];
+
         // Estados de navegação
         function navigate(view, param) {
             document.querySelectorAll('.menu-btn').forEach(btn=>btn.classList.remove('selected'));
@@ -290,42 +275,88 @@
         }
 
         // PRODUTOS POR CATEGORIA
-        function renderProdutos(categoria) {
-            let ps = produtos.filter(p=>p.cat===categoria);
-            let grid = ps.map(p=>
-                `<div class="card" onclick="navigate('produto',${p.id})">
-                    <img src="${p.img}" alt="${p.nome}">
-                    <strong>${p.nome}</strong>
-                    <span>Vendedor: ${p.vendedor}</span><br>
-                    <span>${p.local} • ${p.distancia}</span><br>
-                    <span>R$ ${p.preco.toFixed(2)} ${p.frete?"<span style='color:#464'>Frete: R$ "+p.frete.toFixed(2)+"</span>":"<span style='color:#2b8e2a;'>Frete Grátis!</span>"}</span>
-                </div>`
-            ).join('');
-            document.getElementById('main-content').innerHTML = `
-                <h1>${categoria} em Geral</h1>
-                <button onclick="navigate('categorias')" class="botao-destaque" style="margin-bottom:22px;">Voltar Categorias</button>
-                <div class="produtos-grid">${grid}</div>
-            `;
+        function renderProdutos(catSel) {
+            // Mostra um carregando básico
+            document.getElementById('main-content').innerHTML = `<h1>${catSel}</h1><div class="produtos-grid">Carregando anúncios...</div>`;
+
+            $.ajax({
+                url: 'get_produtos.php',
+                type: 'GET',
+                data: {categoria: catSel},
+                dataType: 'json',
+                success: function(produtos) {
+                    let html = '';
+                    
+                    if (produtos.length > 0) {
+                        html = produtos.map(p => `
+                            <div class="card" onclick="navigate('produto', ${p.id})">
+                                <img src="${p.imagem_path}" alt="${p.titulo}">
+                                <strong>${p.titulo}</strong>
+                                <p>R$ ${parseFloat(p.valor).toFixed(2)}</p>
+                            </div>
+                        `).join('');
+                    } else {
+                        html = '<p>Nenhum anúncio encontrado nesta categoria.</p>';
+                    }
+                    
+                    document.querySelector('.produtos-grid').innerHTML = html;
+                }
+            });
         }
 
         // DETALHE DE PRODUTO
-        function renderProdutoDetalhe(id) {
-            let p = produtos.find(x=>x.id==id);
-            if(!p) return document.getElementById('main-content').innerHTML = "<p>Produto não encontrado.</p>";
-            document.getElementById('main-content').innerHTML = `
-                <h1>Detalhe do Produto</h1>
-                <div class="produto-detalhe">
-                    <img src="${p.img}" alt="${p.nome}">
-                    <div class="produto-info">
-                        <h2>${p.nome}</h2>
-                        <p>Vendedor: <b>${p.vendedor}</b> <br> Localização: <b>${p.local}</b> (${p.distancia})</p>
-                        <p><b>Preço:</b> R$ ${p.preco.toFixed(2)}</p>
-                        <p><b>Frete:</b> ${p.frete>0?"R$ "+p.frete.toFixed(2):"<span style='color:#2b8e2a;'>Grátis</span>"}</p>
-                        <button class="botao-destaque" onclick="alert('Função Comprar em produção')">Comprar</button>
+        function renderProdutoDetalhe(id, trueButton = true){
+            document.getElementById('main-content').innerHTML = "Carregando detalhes...";
+
+            $.getJSON('get_detalhesproduto.php', { id: id }, function(p) {
+                document.getElementById('main-content').innerHTML = `
+                    <div class="produto-detalhe">
+                        <img src="${p.imagem_path}" alt="${p.titulo}">
+                        
+                        <div class="produto-info">
+                            <h1>${p.titulo}</h1>
+                            <p style="color: #437144; font-weight: bold; font-size: 1.5rem;">
+                                ${p.valor > 0 ? 'R$ ' + parseFloat(p.valor).toFixed(2) : 'Gratuito / Doação'}</p>
+                            <hr>
+
+                            <h3>Anunciante</h3>
+                            <p>${p.nome_vendedor}</p>
+
+                            <h3>Descrição</h3>
+                            <p>${p.descricao}</p>
+                            
+                            <h3>Localização</h3>
+                            <p>${p.endereco} - CEP: ${p.cep}</p>
+
+                            <h3>Frete</h3>
+                            <p>${p.frete}</p>
+
+                            ${trueButton ? `
+                                <button class="botao-destaque" onclick="realizarCompra(${p.id})">
+                                    Tenho Interesse
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
-                </div>
-                <button class="botao-destaque" style="margin-top:70px;" onclick="navigate('categoria','${p.cat}')">Voltar</button>
-            `;
+                `;
+            });
+        }
+
+        //FUNÇÃO QUE PROCESSA OS PEDIDOS
+        function realizarCompra(id) {
+            if (!confirm("Confirmar compra deste material?")) return;
+
+            $.post('pedidos.php', { id_anuncio: id }, function(resposta) {
+                if (resposta.trim() === "sucesso") {
+                    alert("Compra registrada! O anunciante será notificado.");
+                    navigate('home'); 
+                } else if (resposta.trim() === "erro_login") {
+                    alert("Você precisa estar logado para realizar compras!");
+                    renderLogin();
+                } else {
+                    alert(resposta);
+                }
+            });
         }
 
         // FORMULÁRIO DE ANÚNCIO
@@ -385,7 +416,7 @@
         //Perfil/Vendedor
         function renderEscPerfil() {
             document.getElementById('main-content').innerHTML = `
-                <div style="text-align:center; padding:40px;">
+                <div class="form-cadastro" style="text-align:center; padding:40px;">
                     <h1>Vamos Começar?</h1>
                     <p>Escolha o tipo de conta a ser criada</p>
                     <p style="color:red; font-size:14px;">Restrito exclusivamente a residentes de Belém, Ananindeua e Marituba.</p>
@@ -514,6 +545,50 @@
             });
         }
 
+        //TELA DE LOGIN
+        function renderLogin() {
+            document.getElementById('main-content').innerHTML = `
+                <div class="form-cadastro" style="max-width: 350px;">
+                    <h1 style="text-align:center;">Entrar</h1>
+                    <form id="form-login">
+                        <label>E-mail:</label>
+                        <input type="email" name="email" required placeholder="seu@email.com">
+                        
+                        <label>Senha:</label>
+                        <input type="password" name="senha" required placeholder="******">
+                        
+                        <div id="mensagemLogin" style="text-align:center; margin: 10px 0; font-weight:bold;"></div>
+                        
+                        <button type="submit" class="botao-destaque" style="width:100%">Entrar</button>
+                    </form>
+                    <p style="text-align:center; margin-top:15px;">
+                        Não tem conta? <a href="#" onclick="event.preventDefault(); renderEscPerfil()"">Cadastre-se</a>
+                    </p>
+                </div>
+            `;
+
+            // Lógica de envio do Login
+            $('#form-login').on('submit', function(e) {
+                e.preventDefault();
+                const dados = new FormData(this);
+
+                $.ajax({
+                    url: 'login.php',
+                    type: 'POST',
+                    data: dados,
+                    processData: false,
+                    contentType: false,
+                    success: function(resposta) {
+                        if (resposta.trim() === "sucesso") {
+                            renderConta(); // Se logou, vai para o perfil
+                        } else {
+                            $('#mensagemLogin').css('color', 'red').html(resposta);
+                        }
+                    }
+                });
+            });
+        }
+
         //MINHA CONTA
         function renderConta() {
             // Chamada AJAX para buscar dados da sessão e do banco
@@ -525,7 +600,7 @@
                     if (dados.erro) {
                         // Se não estiver logado, aparecerá essa tela
                         document.getElementById('main-content').innerHTML = `
-                            <div style="text-align:center; padding:50px;">
+                            <div class="form-cadastro" style="text-align:center; padding:50px;">
                                 <h2>Você ainda não possui uma conta.</h2>
                                 <p>Para ver seus anúncios, você precisa estar logado.</p>
                                 <button class="menu-btn" onclick="renderEscPerfil()">Cadastrar-se</button>
@@ -542,12 +617,16 @@
                     let htmlHistorico = '';
 
                     if (dados.historico.length > 0) {
-                        htmlHistorico = dados.historico.map(p => `
-                            <div class="card">
-                                <img src="${p.imagem_path}" width="300" height="300" alt="${p.titulo}">
-                                <strong>${p.titulo}</strong><br>
-                                R$ ${parseFloat(p.valor).toFixed(2)}
-                            </div>`).join('');
+                        htmlHistorico = dados.historico.map(p => {
+                            const produtoId = p.id || p.id_anuncio;
+                            return `
+                                <div class="card" onclick="navigate('produto_conta', ${produtoId})">
+                                    <img src="${p.imagem_path}" alt="${p.titulo}">
+                                    <strong>${p.titulo}</strong><br>
+                                    R$ ${parseFloat(p.valor).toFixed(2)}
+                                </div>
+                            `;
+                        }).join('');
                     } else {
                         htmlHistorico = dados.perfil === 'Vendedor'
                             ? '<p>Você ainda não anunciou nada. <a href="#" onclick="event.preventDefault(); renderAnunciar()">Anunciar agora!</a></p>'
@@ -556,7 +635,7 @@
 
                     document.getElementById('main-content').innerHTML = `
                         <h1>Minha Conta</h1>
-                        <div style="display:flex;gap:55px;flex-wrap:wrap;margin-top:20px;">
+                        <div style="display:grid;grid-template-columns: 250px 1fr; gap:55px; margin-top:20px;">
                             <div>
                                 <img src="img/perfil_default.png" alt="Usuário" style="width:135px;border-radius:50%;margin-bottom:12px;">
                                 <p><b>Nome:</b> ${dados.nome}</p>
@@ -614,7 +693,8 @@
             if(view==="home") renderHome();
             if(view==="categorias") renderCategorias();
             if(view==="categoria") renderProdutos(param);
-            if(view==="produto") renderProdutoDetalhe(param);
+            if(view==="produto") renderProdutoDetalhe(param, true);
+            if(view==="produto_conta") renderProdutoDetalhe(param, false);
             if(view==="anunciar") renderAnunciar();
             if(view==="cadastro") renderEscPerfil();
             if(view==="conta") renderConta();
@@ -627,7 +707,5 @@
             if(view==="conta") document.querySelectorAll('.menu-btn')[4].classList.add('selected');
         }
     </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 </body>
 </html>

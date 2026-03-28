@@ -2,6 +2,11 @@
 session_start();
 include 'conexao.php';
 
+$sql = "SELECT a.*, p.status, p.id AS id_pedido
+FROM anuncio a
+LEFT JOIN pedidos p ON a.id = p.id_anuncio
+WHERE a.id_usuario = ?";
+
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['usuario_id'])) {
@@ -17,7 +22,7 @@ $user = $res->fetch_assoc();
 
 //Pega os anúncios desse usuário (Vendas)
 // Se você quiser compras, precisaria daquela tabela extra, mas vamos focar no que já tem:
-$resAnuncios = $conn->query("SELECT titulo, valor, imagem_path FROM anuncio WHERE id_usuario = $id ORDER BY create_date DESC");
+$resAnuncios = $conn->query("SELECT id, titulo, valor, imagem_path FROM anuncio WHERE id_usuario = $id ORDER BY create_date DESC");
 $historico = [];
 while($row = $resAnuncios->fetch_assoc()) {
     $historico[] = $row;
