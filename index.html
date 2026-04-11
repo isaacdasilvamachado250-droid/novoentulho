@@ -18,6 +18,8 @@
             font-family: Montserrat, sans-serif;
             background: #fff;
             min-height: 100vh;
+            padding-bottom: 80px; 
+            box-sizing: border-box;
         }
 
         header, nav {
@@ -106,6 +108,24 @@
             margin-bottom: 6px;
         }
 
+        .btn-pedidos {
+            background-color: #437144;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: Montserrat, sans-serif;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            transition: background 0.2s;
+            z-index: 10; /* Garante que ele fique acima do clique do card */
+        }
+
+        .btn-pedidos:hover {
+            background-color: #355a36;
+        }
+
         /* Detalhes de produto */
         .produto-detalhe {
             display: flex;
@@ -172,18 +192,20 @@
         /* Footer */
         footer {
             background: #eafdc9;
-            padding: 17px 9vw 17px 2vw;
+            padding: 15px 40px;
             color: #437144;
             font-size: 1.08rem;
             position: fixed;
-            width: 100vw;
+            width: 100%;
             left: 0;
+            right: 0;
             bottom: 0;
             z-index: 10;
             border-top: 2px solid #c9ebac;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-sizing: border-box;
         }
         .footer-logo {
             font-weight: bold;
@@ -218,8 +240,8 @@
         <span><b>UFPA - Campus Belém - GEPPES - @GEPPES | 8h-12h/14h-18h | (91) 98441-9680</b></span>
     </footer>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="Jquery/jquery-3.6.0.min.js"></script>
+    <script src="Jquery/jquery.mask.js"></script>
     <script>
         // Dados fictícios de exemplo, pode carregar do backend ou localStorage!
         const categorias = [
@@ -289,7 +311,9 @@
                     
                     if (produtos.length > 0) {
                         html = produtos.map(p => `
-                            <div class="card" onclick="navigate('produto', ${p.id})">
+                            <div style="padding: 20px;">
+                                <button class="menu-btn" onclick="renderCategorias()">Voltar para Categorias</button>
+                            <div style="margin-top: 30px;" class="card" onclick="navigate('produto', ${p.id})">
                                 <img src="${p.imagem_path}" alt="${p.titulo}">
                                 <strong>${p.titulo}</strong>
                                 <p>R$ ${parseFloat(p.valor).toFixed(2)}</p>
@@ -300,6 +324,8 @@
                     }
                     
                     document.querySelector('.produtos-grid').innerHTML = html;
+                    html += `</div>`;
+                main.innerHTML = html;
                 }
             });
         }
@@ -328,6 +354,13 @@
                             <h3>Localização</h3>
                             <p>${p.endereco} - CEP: ${p.cep}</p>
 
+                            <iframe width= "100%"
+                            height= "300px"
+                            style= "border:0; border-radius:12px; margin-top:10px;"
+                            loading= "lazy";
+                            allowfullscreen
+                            src="https://www.google.com/maps?q=${encodeURIComponent(p.endereco)}&hl=pt&output=embed"></iframe>
+                            
                             <h3>Frete</h3>
                             <p>${p.frete}</p>
 
@@ -344,18 +377,44 @@
 
         //FUNÇÃO QUE PROCESSA OS PEDIDOS
         function realizarCompra(id) {
-            if (!confirm("Confirmar compra deste material?")) return;
+            if (!confirm("Confirmar interesse neste material?")) return;
 
-            $.post('pedidos.php', { id_anuncio: id }, function(resposta) {
-                if (resposta.trim() === "sucesso") {
-                    alert("Compra registrada! O anunciante será notificado.");
-                    navigate('home'); 
-                } else if (resposta.trim() === "erro_login") {
-                    alert("Você precisa estar logado para realizar compras!");
+            $.post('pedidos.php', { id_anuncio: id })
+            .done(function(resposta) {
+                resposta = resposta.trim();
+
+                if (resposta === "sucesso") {
+                    $(`button[onclick="realizarCompra(${id})"]`).prop("disabled", true).text("Interesse enviado");
+                } 
+                else if (resposta === "erro_login") {
+                    alert("Você precisa estar logado!");
                     renderLogin();
-                } else {
+                } 
+                else {
                     alert(resposta);
                 }
+            })
+            .fail(function() {
+                alert("Erro ao conectar com o servidor.");
+            });
+        }
+
+        function finalizarVenda(idAnuncio, idPedido) {
+            if (!confirm("Confirmar venda deste produto?")) return;
+
+            $.post('conf_venda.php', {
+                id_anuncio: idAnuncio,
+                id_pedido: idPedido
+            }, function(resposta) {
+
+                if (resposta.trim() === "sucesso") {
+                    renderConta();
+                } else if (resposta.trim() === "erro_permissao") {
+                    alert("Você não tem permissão para isso.");
+                } else {
+                    alert("Erro: " + resposta);
+                }
+
             });
         }
 
@@ -425,7 +484,7 @@
                         <button class="menu-btn" onclick="renderCadastro('Comprador')">Perfil Comprador</button>
                         <button class="menu-btn" onclick="renderCadastro('Vendedor')">Perfil Vendedor</button>
                     </div>
-                    <p style="margin-top:20px;">Já possui conta? <a href="#" onclick="renderLogin()">Entrar.</a></p>
+                    <p style="margin-top:20px;">Já possui conta? <a href="#" onclick="event.preventDefault();renderLogin()">Entrar.</a></p>
                 </div>
             `;
         }
@@ -602,35 +661,81 @@
                         document.getElementById('main-content').innerHTML = `
                             <div class="form-cadastro" style="text-align:center; padding:50px;">
                                 <h2>Você ainda não possui uma conta.</h2>
-                                <p>Para ver seus anúncios, você precisa estar logado.</p>
+                                <p>Para realizar compras ou anunciar materiais, você precisa criar uma conta.</p>
                                 <button class="menu-btn" onclick="renderEscPerfil()">Cadastrar-se</button>
                                 <br>
-                                <p style="margin-top:30px;">Já tem uma conta?</p>
+                                <p style="margin-top:30px;">Já tem uma conta? Faça login aqui.</p>
                                 <button class="menu-btn" onclick="renderLogin()">Fazer Login</button>
                             </div>
                         `;
                         return;
                     }
-
+                    
                     let tituloHistorico = (dados.perfil === 'Vendedor') ? 'Minhas Vendas' : 'Últimas Compras';
-
                     let htmlHistorico = '';
 
-                    if (dados.historico.length > 0) {
-                        htmlHistorico = dados.historico.map(p => {
-                            const produtoId = p.id || p.id_anuncio;
-                            return `
-                                <div class="card" onclick="navigate('produto_conta', ${produtoId})">
-                                    <img src="${p.imagem_path}" alt="${p.titulo}">
-                                    <strong>${p.titulo}</strong><br>
-                                    R$ ${parseFloat(p.valor).toFixed(2)}
+                    let lista = dados.historico || [];
+                    
+                    if (lista && lista.length > 0) {
+                        htmlHistorico = lista.map(p => {
+            if (dados.perfil === 'Vendedor') {
+                let statusAtual = p.status || 'ativo'; 
+                let statusHTML = '';
+
+                if (statusAtual === 'vendido') {
+                    statusHTML = '<span style="color: green; font-weight: bold;">Negociado</span>';
+                } else {
+                    statusHTML = `<button class="btn-pedidos" onclick="event.stopPropagation(); verPedidos(${p.id})">Ver pedidos</button>`;
+                }
+
+                return `
+                    <div class="card" onclick="renderProdutoDetalhe(${p.id})">
+                        <img src="${p.imagem_path || 'img/default.png'}" alt="${p.titulo}">
+                        <div style="padding: 10px;">
+                            <strong>${p.titulo}</strong><br>
+                            <span>R$ ${parseFloat(p.valor || 0).toFixed(2)}</span><br>
+                            <div style="margin-top: 8px;">${statusHTML}</div>
+                        </div>
+                    </div>`;
+                    } else {
+                        // COMPRADOR
+                        let statusPedido = '';
+                        let corStatus = '';
+
+                        if (p.status === 'pendente') {
+                            statusPedido = 'Aguardando resposta';
+                            corStatus = 'yellow';
+                        } else if (p.status === 'aceito') {
+                            statusPedido = 'Pedido aceito';
+                            corStatus = 'green';
+                        } else if (p.status === 'recusado') {
+                            statusPedido = 'Pedido recusado';
+                            corStatus = 'red';
+                        } else if (p.status === 'cancelado') {
+                            statusPedido = 'Pedido cancelado';
+                            corStatus = 'gray';
+                        } else {
+                            statusPedido = 'Status desconhecido';
+                            corStatus = 'blue';
+                        }
+
+                        return `
+                            <div class="card" onclick="renderProdutoDetalhe(${p.id_anuncio})">
+                                <img src="${p.imagem_path || 'img/default.png'}" alt="${p.titulo_anuncio || p.titulo}">
+                                <div style="padding: 10px;">
+                                    <strong>${p.titulo_anuncio || p.titulo}</strong><br>
+                                    <span style="color: ${corStatus}; font-weight: bold; font-size: 0.85rem;">
+                                        ${statusPedido}
+                                    </span><br>
+                                    <small>Anunciante: ${p.nome_vendedor || p.id_vendedor || ''}</small>
                                 </div>
-                            `;
-                        }).join('');
+                            </div>`;
+                    }
+                }).join('');
                     } else {
                         htmlHistorico = dados.perfil === 'Vendedor'
-                            ? '<p>Você ainda não anunciou nada. <a href="#" onclick="event.preventDefault(); renderAnunciar()">Anunciar agora!</a></p>'
-                            : '<p>Você ainda não comprou nada. <a href="#" onclick="renderHome()">Explorar ofertas!</a></p>';
+                            ? '<p>Você ainda não anunciou nenhum material. <a href="#" onclick="event.preventDefault(); renderAnunciar()">Anunciar agora!</a></p>'
+                            : '<p>Você ainda não efetuou nenhum pedido de compra. <a href="#" onclick="event.preventDefault(); renderCategorias()">Explorar aúncios!</a></p>';
                     }
 
                     document.getElementById('main-content').innerHTML = `
@@ -659,6 +764,50 @@
             });
         }
 
+        function verPedidos(idAnuncio) {
+            const main = document.getElementById('main-content');
+            main.innerHTML = "<h2>Carregando pedidos...</h2>";
+
+            $.getJSON('get_interesses.php', { id: idAnuncio }, function(lista) {
+                let html = `
+                    <div style="padding: 20px;">
+                        <button class="menu-btn" onclick="renderConta()">Voltar para Minha Conta</button>
+                        <h2 style="margin-top: 20px;">Solicitações para este anúncio</h2>
+                `;
+
+                if (lista.length === 0) {
+                    html += "<p>Nenhum interessado até o momento.</p>";
+                } else {
+                    lista.forEach(p => {
+                        let foneLimpo = p.telefone.replace(/\D/g, '');
+                        let linkZap = `https://api.whatsapp.com/send?phone=55${foneLimpo}`;
+                        
+                        html += `
+                            <div style="border: 1px solid #ddd; padding: 15px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <strong>${p.nome}</strong><br>
+                                    <span>WhatsApp: ${p.telefone}</span><br>
+                                </div>
+                                <div>
+                                    <a href="${linkZap}" target="_blank" class="botao-destaque" style="background:#25D366; text-decoration:none; padding: 8px 15px; border-radius: 20px; color: white; display: inline-block;">
+                                        WhatsApp
+                                    </a>
+                                    ${p.status === 'pendente' ? `
+                                        <button class="botao-destaque" onclick="finalizarVenda(${idAnuncio}, ${p.id_pedido})" style="margin-left: 10px;">
+                                            Confirmar Venda
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `</div>`;
+                main.innerHTML = html;
+            });
+        }
+
         //BOTÃO "SAIR"
         function logout() {
             if (confirm("Deseja realmente sair?")) {
@@ -667,7 +816,6 @@
                     type: 'GET',
                     success: function(resposta) {
                         if (resposta.trim() === "sucesso") {
-                            alert("Você saiu da sua conta.");
                             renderConta();
                         }
                     },

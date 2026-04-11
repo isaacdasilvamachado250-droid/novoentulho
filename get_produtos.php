@@ -9,7 +9,7 @@ $categoria = isset($_GET['categoria']) ? $_GET['categoria'] : '';
 
 if ($categoria != '') {
     //Busca apenas produtos daquela categoria
-    $stmt = $conn->prepare("SELECT * FROM anuncio WHERE categoria = ? ORDER BY id DESC");
+    $stmt = $conn->prepare("SELECT * FROM anuncio WHERE categoria = ? AND (status IS NULL OR status != 'vendido') ORDER BY id DESC");
     $stmt->bind_param("s", $categoria);
 } else {
     //Se não vier categoria, busca tudo (para a Home, por exemplo)
